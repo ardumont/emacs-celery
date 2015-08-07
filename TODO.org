@@ -1,12 +1,15 @@
 #+title: backlog
 #+author: ardumont
 
-* TODO 0.0.2 [%]
+* IN-PROGRESS 0.0.2 [20%]
+- [X] Fix release script error
+- [ ] Fix ci
 - [ ] Update version
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
-* IN-PROGRESS 0.0.1 [100%]
+* DONE 0.0.1 [100%]
+CLOSED: [2015-08-07 Fri 20:28]
 - [X] Agnostify existing code
 - [X] Improve readme
 - [X] Add version

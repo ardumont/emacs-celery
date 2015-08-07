@@ -13,4 +13,4 @@ uploadFile () {
          $marmaladeUrl/v1/packages
 }
 
-uploadFile ardumont ~/.marmalade/token ./org2jekyll.el
+uploadFile ardumont ~/.marmalade/token ./celery.el
