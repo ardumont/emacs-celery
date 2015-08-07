@@ -6,13 +6,13 @@
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
-* IN-PROGRESS 0.0.1 [66%]
+* IN-PROGRESS 0.0.1 [77%]
 - [X] Agnostify existing code
 - [X] Improve readme
 - [X] Add version
 - [X] Add cask
 - [X] Add some tests
 - [X] Add some other tests
-- [ ] Plug ci
+- [X] Plug ci
 - [ ] Plug script release
 - [ ] Deliver to marmalade
