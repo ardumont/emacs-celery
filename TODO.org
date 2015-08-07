@@ -7,11 +7,11 @@
 - [ ] Deliver to el-get
 - [ ] Deliver to marmalade
 
-* IN-PROGRESS 0.0.1 [50%]
+* IN-PROGRESS 0.0.1 [66%]
 
 - [X] Agnostify existing code
 - [X] Improve readme
 - [X] Add version
-- [ ] Add cask
+- [X] Add cask
 - [ ] Add tests
 - [ ] Plug ci
