@@ -1,12 +1,5 @@
-#+title: backlog
-#+author: ardumont
+# 0.0.1
 
-* TODO 0.0.2 [%]
-- [ ] Update version
-- [ ] Deliver to melpa
-- [ ] Deliver to el-get
-
-* IN-PROGRESS 0.0.1 [100%]
 - [X] Agnostify existing code
 - [X] Improve readme
 - [X] Add version
