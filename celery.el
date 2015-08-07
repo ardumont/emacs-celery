@@ -46,7 +46,7 @@
 ;;; Code:
 
 (require 'deferred)
-(require 'dash)
+(require 'dash-functional)
 (require 'json)
 (require 's)
 
@@ -90,10 +90,11 @@ For example, if a remote machine only knows celery, it could be defined as:
 
 (defun celery-count-processes-per-worker (stats worker)
   "Compute the number of tasks from STATS per WORKER."
-  (->> (assoc-default worker celery-last-known-stats)
-       (assoc-default 'pool)
-       (assoc-default 'processes)
-       length))
+  (-when-let (w (assoc-default worker stats))
+    (->> w
+         (assoc-default 'pool)
+         (assoc-default 'processes)
+         length)))
 
 (defun celery-all-workers (stats)
   "Compute the number of workers from STATS."
@@ -102,10 +103,11 @@ For example, if a remote machine only knows celery, it could be defined as:
 ;; total for one worker
 (defun celery-total-tasks-per-worker (stats worker)
   "Compute the total number of tasks from STATS for WORKER."
-  (->> (assoc-default worker stats)
-       (assoc-default 'total)
-       car
-       cdr))
+  (-when-let (w (assoc-default worker stats))
+    (->> w
+         (assoc-default 'total)
+         car
+         cdr)))
 
 (defun celery--to-org-table-row (stats &optional workers)
   "Compute a row string from the STATS.
@@ -130,11 +132,11 @@ If WORKERS list is specified, use it otherwise, use the workers list in STATS."
       ;; clean up
       (kill-line)
       ;; insert the information we look for
-      (insert (celery--to-org-table-row celery-last-known-stats workers))
+      (insert (celery--to-org-table-row stats workers))
       ;; align org column
       (org-cycle)
       ;; recompute eventual formula
-      (org-ctrl-c-star))))
+      (org-table-recalculate 'all))))
 
 (defun celery-simplify-stats (stats)
   "Compute the number of total tasks done per worker from the STATS."
@@ -142,8 +144,6 @@ If WORKERS list is specified, use it otherwise, use the workers list in STATS."
                  (-compose (-partial #'cons :total) (-partial #'celery-total-tasks-per-worker stats))
                  (-compose (-partial #'cons :processes) (-partial #'celery-count-processes-per-worker stats)))
           (celery-all-workers stats)))
-
-;; (celery-simplify-stats celery-last-known-stats)
 
 (defun celery--compute-stats-workers-with-refresh (&optional refresh)
   "If REFRESH is specified or no previous stats, trigger a computation.
