@@ -1,0 +1,19 @@
+#+title: backlog
+#+author: ardumont
+
+* TODO 0.0.2 [%]
+- [ ] Update version
+- [ ] Deliver to melpa
+- [ ] Deliver to el-get
+
+* IN-PROGRESS 0.0.1 [100%]
+- [X] Agnostify existing code
+- [X] Improve readme
+- [X] Add version
+- [X] Add cask
+- [X] Add some tests
+- [X] Add some other tests
+- [X] Plug ci
+- [X] Plug script release
+- [X] Deliver to marmalade
+- [X] Release notes

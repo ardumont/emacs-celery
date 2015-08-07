@@ -1,16 +1,22 @@
 emacs-celery
 ============
 
-The goal is to control celery pool from emacs.
+A dumb emacs client to try and control celery pool from emacs.
 
 # How
 
-Execute the `celery` command
+Partial wrapper around `celery` command to:
+- extract current stats
+- ...
+
+We should be able to do more:
+- pool grow, shrink, etc...
 
 # Deps
 
-celery or ssh configuration.
+celery or ssh configuration on a ready celery node
 
 # Stability
 
-Not yet.
+As is.
+Feel free to file bugs or propose PR to improve.
