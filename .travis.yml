@@ -1,4 +1,5 @@
 language: emacs-lisp
+sudo: required
 env:
   global:
     - PATH=$HOME/.cask/bin:$HOME/.evm/bin:$PATH
