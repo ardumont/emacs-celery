@@ -53,17 +53,22 @@
 (defcustom celery-command "celery"
   "The celery command in charge of outputing the result this mode parse.
 The user can override this.
-For example, if a remote machine only knows celery, it could define it as:
+For example, if a remote machine only knows celery, it could be defined as:
 \(custom-set-variables '\(celery-command \"ssh remote-node celery")
 
 (defun celery-log (&rest strs)
   "Log STRS."
   (apply #'message (format "Celery - %s" (car strs)) (cdr strs)))
 
+(defun celery--compute-raw-celery-output ()
+  "Execute the celery command and return the raw output."
+  (-> (format "%s inspect stats --quiet --no-color" celery-command)
+      shell-command-to-string ))
+
 (defun celery--compute-json-string-stats ()
   "Compute the workers' stats as json string."
   (let ((initial-json (with-temp-buffer
-                        (insert (shell-command-to-string (format "%s inspect stats --quiet --no-color" celery-command)))
+                        (insert (celery--compute-raw-celery-output))
                         (goto-char (point-min))
                         (while (re-search-forward "celery@\\(.*\\): OK" nil t)
                           (replace-match (format ", \"%s\":" (match-string 1))))
