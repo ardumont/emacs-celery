@@ -113,7 +113,8 @@ Mostly to work offline.")
 
 (defun celery--to-org-table-row (stats)
   "Compute a row string from the STATS."
-  (->> (mapcar (-compose #'int-to-string (-partial #'celery-total-tasks-per-worker stats))
+  (->> (mapcar (-compose #'int-to-string
+                         (-partial #'celery-total-tasks-per-worker stats))
                (celery-all-worker-names stats))
        (cons (s-trim (current-time-string)))
        (s-join " | " )
@@ -141,8 +142,10 @@ Mostly to work offline.")
 (defun celery-simplify-stats (stats)
   "Compute the number of total tasks done per worker from the STATS."
   (mapcar (-juxt 'identity
-                 (-compose (-partial #'cons :total) (-partial #'celery-total-tasks-per-worker stats))
-                 (-compose (-partial #'cons :processes) (-partial #'celery-count-processes-per-worker stats)))
+                 (-compose (-partial #'cons :total)
+                           (-partial #'celery-total-tasks-per-worker stats))
+                 (-compose (-partial #'cons :processes)
+                           (-partial #'celery-count-processes-per-worker stats)))
           (celery-all-worker-names stats)))
 
 (defun celery-filter-workers (stats &optional filter-workers-list)
@@ -206,7 +209,8 @@ Otherwise, reuse the latest known values."
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
   (interactive "P")
   (celery--with-delay-apply
-   (-compose (-partial 'celery-log "Number of total tasks done: %s") 'celery-all-tasks-consumed)
+   (-compose (-partial 'celery-log "Number of total tasks done: %s")
+             'celery-all-tasks-consumed)
    refresh))
 
 (defvar celery-mode-map
