@@ -190,6 +190,7 @@
 ;;     (mock (celery-simplify-stats :stats) => :simplified-stats)
 ;;     (celery--with-delay-apply
 ;;      (lambda (stats)
+;;        (message "stats: %s" stats)
 ;;        (should (equal :simplified-stats stats))))))
 ;; does not work
 
@@ -228,3 +229,10 @@
                '((w01 (total
                        (swh\.worker\.tasks\.do_something_awesome . 27113))))
                'w02)))
+
+(ert-deftest test-celery--compute-raw-celery-output ()
+  (should (equal :foobar
+                 (let ((celery-command "celery"))
+                   (with-mock
+                     (mock (shell-command-to-string "celery inspect stats --quiet --no-color") => :foobar)
+                     (celery--compute-raw-celery-output))))))
