@@ -183,7 +183,7 @@ if REFRESH is non nil or no stats exists, trigger a computation.
 Otherwise, reuse the latest known values.
 Also, if workers is specified, use this list otherwise use
 `celery-workers-list'.
-This command writes dummily a formatted org-table row.
+This command writes a dummy formatted org-table row.
 So this needs to be applied in an org context to make sense."
   (interactive "P")
   (celery--with-delay-apply
