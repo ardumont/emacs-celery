@@ -63,9 +63,9 @@
 
                    (celery-compute-full-stats-workers)))))
 
-(ert-deftest test-celery-all-workers ()
-  (should (equal '(w01 w02) (celery-all-workers '((w01 (a . b)) (w02 (b . c))))))
-  (should-not (celery-all-workers '())))
+(ert-deftest test-celery-all-worker-names ()
+  (should (equal '(w01 w02) (celery-all-worker-names '((w01 (a . b)) (w02 (b . c))))))
+  (should-not (celery-all-worker-names '())))
 
 (ert-deftest test-celery-count-processes-per-worker ()
   (should (equal 5 (let ((stats '((w02 (pool
@@ -128,11 +128,6 @@
 (ert-deftest test-celery-log ()
   (should (string= "Celery - This is a formatted message. Hello dude, how are you?"
                    (celery-log "This is a formatted message. Hello %s, %s" "dude" "how are you?"))))
-
-(car '(:total . 27113))
-(cdr '(:total . 27113))
-(mapcar (-partial 'assoc-default :total) '((worker02 (:total . 27113) (:processes . 2))
-                                           (worker99 (:total . 27113) (:processes . 2))))
 
 (ert-deftest test-celery-simplify-stats ()
   (should (equal
@@ -215,7 +210,20 @@
 ;;        (should (equal :simplified-stats stats))))))
 ;; does not work
 
-(ert-deftest test-celery-all-tasks-consumed()
+(ert-deftest test-celery-all-tasks-consumed ()
   (should (equal 6000
                  (celery-all-tasks-consumed '((worker02 (:total . 3600) (:processes . 2))
                                               (worker99 (:total . 2400) (:processes . 2)))))))
+
+(ert-deftest test-celery-filter-workers ()
+  (should-not (celery-filter-workers nil))
+  (should (equal :stats
+                 (celery-filter-workers :stats)))
+  (should (equal '((w01 (:total . 1000) (:processes . 1))
+                   (w02 (:total . 2000) (:processes . 2))
+                   (w03 (:total . 3000) (:processes . 3)))
+                 (celery-filter-workers '((w03 (:total . 3000) (:processes . 3))
+                                          (w01 (:total . 1000) (:processes . 1))
+                                          (w02 (:total . 2000) (:processes . 2))
+                                          (w04 (:total . 4000) (:processes . 4)))
+                                        '(w01 w02 w03)))))
