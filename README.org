@@ -3,6 +3,7 @@
 
 [[file:https://travis-ci.org/ardumont/emacs-celery.svg]]
 [[https://coveralls.io/r/ardumont/emacs-celery][file:https://coveralls.io/repos/ardumont/emacs-celery/badge.svg]]
+[[file:https:/img.shields.io/badge/marmalade-package-green.svg]]
 
 A minor mode to draw stats from celery and more?
 
