@@ -177,6 +177,7 @@ Otherwise, reuse the latest known stats `celery-last-known-stats'."
     worker08)
   "The list of workers to extract stats from.")
 
+;;;###autoload
 (defun celery-stats-to-org-row (&optional refresh workers)
   "Compute simplified stats with optional REFRESH for WORKERS.
 if REFRESH is non nil or no stats exists, trigger a computation.
@@ -192,6 +193,7 @@ So this needs to be applied in an org context to make sense."
                                (if workers workers celery-workers-list)))
    refresh))
 
+;;;###autoload
 (defun celery-compute-stats-workers (&optional refresh)
   "Compute the simplified workers' stats.
 if REFRESH is non nil, trigger a computation.
@@ -208,6 +210,7 @@ Otherwise, reuse the latest known values."
        (mapcar #'cadr)
        (apply #'+)))
 
+;;;###autoload
 (defun celery-check-cloner-workers (&optional refresh)
   "Check the current number of tasks executed by workers in celery.
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
@@ -224,6 +227,7 @@ if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
     map)
   "Keymap for celery mode.")
 
+;;;###autoload
 (define-minor-mode celery-mode
   "Minor mode to consolidate Emacs' celery extensions.
 
