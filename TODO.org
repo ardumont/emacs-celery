@@ -5,7 +5,8 @@
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
-* IN-PROGRESS 0.0.2 [100%]
+* DONE 0.0.2 [100%]
+CLOSED: [2015-08-08 Sat 11:33]
 - [X] Fix release script error
 - [X] Add missing autoload statements
 - [X] Fix ci
