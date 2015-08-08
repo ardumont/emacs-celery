@@ -198,27 +198,26 @@ Otherwise, reuse the latest known values."
    (-partial 'celery-log "Stats: %s")
    refresh))
 
-(defun celery-number-tasks-consumed-per-worker (stats)
-  "Compute number tasks consumed per worker from the STATS."
+(defun celery-all-tasks-consumed (stats)
+  "Compute the total number of consumed tasks from the STATS."
   (->> stats
-       celery-simplify-stats
-       (mapcar #'cadr)
+       (mapcar (-partial 'assoc-default :total))
        (apply #'+)))
 
 ;;;###autoload
-(defun celery-check-cloner-workers (&optional refresh)
+(defun celery-compute-tasks-consumed-workers (&optional refresh)
   "Check the current number of tasks executed by workers in celery.
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
   (interactive "P")
   (celery--with-delay-apply
-   (-partial 'celery-log "Number of tasks done: %s")
+   (-compose (-partial 'celery-log "Number of total tasks done: %s") 'celery-all-tasks-consumed)
    refresh))
 
 (defvar celery-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c , s") 'celery-compute-stats-workers)
     (define-key map (kbd "C-c , o") 'celery-stats-to-org-row)
-    (define-key map (kbd "C-c , a") 'celery-check-cloner-workers)
+    (define-key map (kbd "C-c , a") 'celery-compute-tasks-consumed-workers)
     map)
   "Keymap for celery mode.")
 

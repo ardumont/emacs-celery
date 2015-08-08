@@ -1,15 +1,18 @@
 #+title: backlog
 #+author: ardumont
 
-* IN-PROGRESS 0.0.2 [75%]
+* TODO 0.0.3 [%]
+- [ ] Deliver to melpa
+- [ ] Deliver to el-get
+
+* IN-PROGRESS 0.0.2 [100%]
 - [X] Fix release script error
 - [X] Add missing autoload statements
 - [X] Fix ci
 - [X] Improve documentation (README, doc comment...)
 - [X] Add license
 - [X] Update version
-- [ ] Deliver to melpa
-- [ ] Deliver to el-get
+- [X] Fix celery-compute-tasks-consumed-workers + add tests
 
 * DONE 0.0.1 [100%]
 CLOSED: [2015-08-07 Fri 20:28]

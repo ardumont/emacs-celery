@@ -129,6 +129,10 @@
   (should (string= "Celery - This is a formatted message. Hello dude, how are you?"
                    (celery-log "This is a formatted message. Hello %s, %s" "dude" "how are you?"))))
 
+(car '(:total . 27113))
+(cdr '(:total . 27113))
+(mapcar (-partial 'assoc-default :total) '((worker02 (:total . 27113) (:processes . 2))
+                                           (worker99 (:total . 27113) (:processes . 2))))
 
 (ert-deftest test-celery-simplify-stats ()
   (should (equal
@@ -210,3 +214,8 @@
 ;;      (lambda (stats)
 ;;        (should (equal :simplified-stats stats))))))
 ;; does not work
+
+(ert-deftest test-celery-all-tasks-consumed()
+  (should (equal 6000
+                 (celery-all-tasks-consumed '((worker02 (:total . 3600) (:processes . 2))
+                                              (worker99 (:total . 2400) (:processes . 2)))))))
