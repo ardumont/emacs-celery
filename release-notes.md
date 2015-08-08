@@ -1,3 +1,12 @@
+# 0.0.3
+
+- [X] Simplify json parsing
+- [X] Fix total tasks done problems when multiple tasks
+- [X] Add group for customization group
+- [X] melpa - https://github.com/milkypostman/melpa/pull/3002
+- [X] el-get - https://github.com/dimitri/el-get/pull/2230
+- [X] Release notes
+
 # 0.0.2
 
 - [X] Fix release script error
