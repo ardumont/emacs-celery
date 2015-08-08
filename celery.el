@@ -47,15 +47,22 @@
 (require 'json)
 (require 's)
 
+(defgroup celery nil " Celery customisation group."
+  :tag "Celery"
+  :version "0.0.3"
+  :group 'celery)
+
 (defcustom celery-command "celery"
   "The celery command in charge of outputing the result this mode parse.
 The user can override this.
 For example, if a remote machine only knows celery, it could be defined as:
-\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)")
+\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)"
+  :group 'celery)
 
 (defcustom celery-workers-list nil
   "If non nil, filter the stats according to the content of this list.
-This is a list of worker names.")
+This is a list of worker names."
+  :group 'celery)
 
 (defvar celery-last-known-stats nil
   "Latest worker stats.
