@@ -135,19 +135,19 @@ Mostly to work offline.")
 
 (defun celery-full-stats-count-processes-per-worker (full-stats worker)
   "Access processes stats from FULL-STATS for the WORKER."
-  (-when-let (w (assoc-default worker full-stats))
-    (->> w
+  (-when-let (worker-stats (assoc-default worker full-stats))
+    (->> worker-stats
          (assoc-default 'pool)
          (assoc-default 'processes)
          length)))
 
 (defun celery-full-stats-total-tasks-per-worker (full-stats worker)
   "Compute the total number of tasks from FULL-STATS for WORKER."
-  (-when-let (w (assoc-default worker full-stats))
-    (->> w
+  (-when-let (worker-stats (assoc-default worker full-stats))
+    (->> worker-stats
          (assoc-default 'total)
-         car
-         cdr)))
+         (mapcar #'cdr)
+         (apply #'+))))
 
 (defun celery-simplify-stats (full-stats)
   "Compute the number of total tasks done per worker from the FULL-STATS."

@@ -221,11 +221,12 @@
                 (celery-full-stats-count-processes-per-worker stats 'w02))))
 
 (ert-deftest test-celery-full-stats-total-tasks-per-worker ()
-  (should (equal 3000 (celery-full-stats-total-tasks-per-worker
-                       '((w01 (total
-                               (do_something_awesome . 27000)
-                               (do_awesomer_stuff . 3000))))
-                       'w01)))
+  (should (equal 30000 (celery-full-stats-total-tasks-per-worker
+                        '((w01 (total
+                                (do_something_awesome . 27000)
+                                (do_awesomer_stuff . 2000)
+                                (yet_another_task . 1000))))
+                        'w01)))
   (should-not (celery-full-stats-total-tasks-per-worker
                '((w01 (total
                        (swh\.worker\.tasks\.do_something_awesome . 27113))))
