@@ -5,6 +5,8 @@
 - [X] Fix release script error
 - [X] Add missing autoload statements
 - [X] Fix ci
+- [X] Improve documentation (README, doc comment...)
+- [ ] Add license
 - [ ] Update version
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get

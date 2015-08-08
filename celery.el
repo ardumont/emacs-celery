@@ -1,4 +1,4 @@
-;;; celery.el ---                                      -*- lexical-binding: t; -*-
+;;; celery.el --- a minor mode to draw stats from celery and more?  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  ardumont
 
@@ -32,16 +32,11 @@
 
 ;; For example, either the local machine with:
 ;; - celery installed on machine (apt-get install -y celeryd)
-;; - A ssh ready machine ~/.ssh/config (will help to simplify the command):
-;; Host <your-celery-host>
-;; Hostname <your-celery-hostname>
-;; User <user>
-;; IdentityFile <ssh-access-key>
-;; Now configure
-;; or access to a remote machine already setuped for it and the client machine
-;; able to connect to such machine. Then customize the
-;; `celery-command' variable to `ssh <your-celery-host> celery' and you
-;; are good to go.
+;; - A ssh ready machine (cf. README.org for detailed):
+;; Now configure or access to a remote machine already setuped for it and the
+;; client machine able to connect to such machine:
+;; (custom-set-variables '(celery-command "ssh remote-node celery"))
+;; and you are good to go.
 
 ;;; Code:
 
@@ -54,7 +49,7 @@
   "The celery command in charge of outputing the result this mode parse.
 The user can override this.
 For example, if a remote machine only knows celery, it could be defined as:
-\(custom-set-variables '\(celery-command \"ssh remote-node celery")
+\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)")
 
 (defun celery-log (&rest strs)
   "Log STRS."
