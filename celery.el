@@ -90,26 +90,24 @@ Mostly to work offline.")
       (goto-char (point-min))
       (json-read))))
 
+(defun celery-total-tasks-per-worker (stats worker)
+  "Compute the total number of tasks from STATS for WORKER."
+  (-when-let (w (assoc-default worker stats))
+    (-> w
+        car
+        (plist-get :total))))
+
 (defun celery-count-processes-per-worker (stats worker)
   "Compute the number of tasks from STATS per WORKER."
   (-when-let (w (assoc-default worker stats))
-    (->> w
-         (assoc-default 'pool)
-         (assoc-default 'processes)
-         length)))
+    (-> w
+        car
+        (plist-get :processes)
+        length)))
 
 (defun celery-all-worker-names (stats)
   "Compute the number of workers from STATS."
   (mapcar #'car stats))
-
-;; total for one worker
-(defun celery-total-tasks-per-worker (stats worker)
-  "Compute the total number of tasks from STATS for WORKER."
-  (-when-let (w (assoc-default worker stats))
-    (->> w
-         (assoc-default 'total)
-         car
-         cdr)))
 
 (defun celery--to-org-table-row (stats)
   "Compute a row string from the STATS."
@@ -139,14 +137,28 @@ Mostly to work offline.")
       ;; recompute eventual formula
       (org-table-recalculate 'all))))
 
-(defun celery-simplify-stats (stats)
-  "Compute the number of total tasks done per worker from the STATS."
-  (mapcar (-juxt 'identity
-                 (-compose (-partial #'cons :total)
-                           (-partial #'celery-total-tasks-per-worker stats))
-                 (-compose (-partial #'cons :processes)
-                           (-partial #'celery-count-processes-per-worker stats)))
-          (celery-all-worker-names stats)))
+(defun celery-full-stats-count-processes-per-worker (full-stats worker)
+  "Access processes stats from FULL-STATS for the WORKER."
+  (-when-let (w (assoc-default worker full-stats))
+    (->> w
+         (assoc-default 'pool)
+         (assoc-default 'processes)
+         length)))
+
+(defun celery-full-stats-total-tasks-per-worker (full-stats worker)
+  "Compute the total number of tasks from FULL-STATS for WORKER."
+  (-when-let (w (assoc-default worker full-stats))
+    (->> w
+         (assoc-default 'total)
+         car
+         cdr)))
+
+(defun celery-simplify-stats (full-stats)
+  "Compute the number of total tasks done per worker from the FULL-STATS."
+  (mapcar (lambda (worker)
+            `(,worker (:total ,(celery-full-stats-total-tasks-per-worker full-stats worker)
+                              :processes ,(celery-full-stats-count-processes-per-worker full-stats worker))))
+          (celery-all-worker-names full-stats)))
 
 (defun celery-filter-workers (stats &optional filter-workers-list)
   "Filter the STATS according to FILTER-WORKERS-LIST.

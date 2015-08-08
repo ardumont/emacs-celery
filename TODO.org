@@ -14,6 +14,7 @@
 - [X] Update version
 - [X] Fix celery-compute-tasks-consumed-workers + add tests
 - [X] Improve user's custom filter on workers
+- [X] Refactoring (improve code + add tests)
 
 * DONE 0.0.1 [100%]
 CLOSED: [2015-08-07 Fri 20:28]
