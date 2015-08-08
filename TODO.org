@@ -7,7 +7,7 @@
 - [X] Add group for customization group
 - [X] melpa - https://github.com/milkypostman/melpa/pull/3002
 - [X] el-get - https://github.com/dimitri/el-get/pull/2230
-- [ ] Release notes
+- [X] Release notes
 
 * DONE 0.0.2 [100%]
 CLOSED: [2015-08-08 Sat 11:33]
