@@ -204,13 +204,15 @@ So this needs to be applied in an org context to make sense."
   (interactive "P")
   (celery--with-delay-apply 'celery--stats-to-org-row refresh))
 
+(defalias 'celery-log-stats (-partial 'celery-log "Stats: %s"))
+
 ;;;###autoload
 (defun celery-compute-stats-workers (&optional refresh)
   "Compute the simplified workers' stats.
 if REFRESH is non nil, trigger a computation.
 Otherwise, reuse the latest known values."
   (interactive "P")
-  (celery--with-delay-apply (-partial 'celery-log "Stats: %s") refresh))
+  (celery--with-delay-apply 'celery-log-stats refresh))
 
 (defun celery-all-tasks-consumed (stats)
   "Compute the total number of consumed tasks from the STATS."
@@ -218,15 +220,16 @@ Otherwise, reuse the latest known values."
        (mapcar (-partial 'assoc-default :total))
        (apply #'+)))
 
+(defalias 'celery-log-total-tasks-consumed
+  (-compose (-partial 'celery-log "Number of total tasks done: %s")
+            'celery-all-tasks-consumed))
+
 ;;;###autoload
 (defun celery-compute-tasks-consumed-workers (&optional refresh)
   "Check the current number of tasks executed by workers in celery.
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
   (interactive "P")
-  (celery--with-delay-apply
-   (-compose (-partial 'celery-log "Number of total tasks done: %s")
-             'celery-all-tasks-consumed)
-   refresh))
+  (celery--with-delay-apply 'celery-log-total-tasks-consumed refresh))
 
 (defvar celery-mode-map
   (let ((map (make-sparse-keymap)))
