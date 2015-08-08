@@ -111,18 +111,16 @@ Mostly to work offline.")
          car
          cdr)))
 
-(defun celery--to-org-table-row (stats &optional workers)
-  "Compute a row string from the STATS.
-If WORKERS is specified, use such list otherwise, use the workers from the stats."
+(defun celery--to-org-table-row (stats)
+  "Compute a row string from the STATS."
   (->> (mapcar (-compose #'int-to-string (-partial #'celery-total-tasks-per-worker stats))
-               (if workers workers (celery-all-worker-names stats)))
+               (celery-all-worker-names stats))
        (cons (s-trim (current-time-string)))
        (s-join " | " )
        (format "| %s | ")))
 
-(defun celery--stats-to-org-row (stats &optional workers)
-  "Dump an org table row to the current buffer from STATS and optional WORKERS.
-If WORKERS list is specified, use it otherwise, use the workers list in STATS."
+(defun celery--stats-to-org-row (stats)
+  "Dump an org table row to the current buffer from STATS."
   (save-excursion
     (with-current-buffer (current-buffer)
       ;; make sure i'm at the right position
@@ -134,7 +132,7 @@ If WORKERS list is specified, use it otherwise, use the workers list in STATS."
       ;; clean up
       (kill-line)
       ;; insert the information we look for
-      (insert (celery--to-org-table-row stats workers))
+      (insert (celery--to-org-table-row stats))
       ;; align org column
       (org-cycle)
       ;; recompute eventual formula
@@ -164,7 +162,8 @@ Otherwise, reuse the latest known values."
 (defun celery--with-delay-apply (fn &optional refresh)
   "Execute FN which takes a simplified STATS parameter.
 Detail:
-If REFRESH is non nil or the latest know stats computation is nil, fetch data.
+if REFRESH is non nil or no known stats exists, trigger a computation
+and store the result in `celery-last-known-stats for later.
 Otherwise, reuse the latest known stats `celery-last-known-stats'.
 Then simplify data to keep only relevant data (at the moment).
 Then filter data according to celery-workers-list.
@@ -178,17 +177,14 @@ Then execute FN to do thy bidding."
 ;;;###autoload
 (defun celery-stats-to-org-row (&optional refresh)
   "Compute simplified stats with optional REFRESH.
-if REFRESH is non nil or no stats exists, trigger a computation.
+if REFRESH is non nil or no known stats exists, trigger a computation.
 Otherwise, reuse the latest known values.
-Also, if workers is specified, use this list otherwise use
-`celery-workers-list'.
+Also, use `celery-workers-list' to order/filter celery output.
+Otherwise, reuse the latest known stats `celery-last-known-stats'.
 This command writes a dummy formatted org-table row.
 So this needs to be applied in an org context to make sense."
   (interactive "P")
-  (celery--with-delay-apply
-   (lambda (stats)
-     (celery--stats-to-org-row stats))
-   refresh))
+  (celery--with-delay-apply 'celery--stats-to-org-row refresh))
 
 ;;;###autoload
 (defun celery-compute-stats-workers (&optional refresh)
@@ -196,9 +192,7 @@ So this needs to be applied in an org context to make sense."
 if REFRESH is non nil, trigger a computation.
 Otherwise, reuse the latest known values."
   (interactive "P")
-  (celery--with-delay-apply
-   (-partial 'celery-log "Stats: %s")
-   refresh))
+  (celery--with-delay-apply (-partial 'celery-log "Stats: %s") refresh))
 
 (defun celery-all-tasks-consumed (stats)
   "Compute the total number of consumed tasks from the STATS."
@@ -225,6 +219,12 @@ if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
 
 ;;;###autoload
 (define-minor-mode celery-mode
+
+
+
+
+
+
   "Minor mode to consolidate Emacs' celery extensions.
 
 \\{celery-mode-map}"

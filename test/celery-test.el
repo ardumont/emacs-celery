@@ -86,44 +86,37 @@
                 (celery-total-tasks-per-worker stats 'w02))))
 
 (ert-deftest test-celery-total-tasks-per-worker ()
-  (should (string= "| Fri Aug  7 19:02:12 2015 | 27113 | 300 | " (with-mock
-                                                                   (mock (current-time-string) => "Fri Aug  7 19:02:12 2015")
-                                                                   (let ((stats '((w02 (total
-                                                                                        (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                                                                  (w01 (total
-                                                                                        (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                                                                     (celery--to-org-table-row stats)))))
-  (should (string= "| Fri Aug  7 19:02:38 2015 | 300 | " (with-mock
-                                                           (mock (current-time-string) => "Fri Aug  7 19:02:38 2015")
-                                                           (let ((stats '((w02 (total
-                                                                                (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                                                          (w01 (total
-                                                                                (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                                                             (celery--to-org-table-row stats '(w01)))))))
+  (should (string= "| Fri Aug  7 19:02:12 2015 | 27113 | 300 | "
+                   (with-mock
+                     (mock (current-time-string) => "Fri Aug  7 19:02:12 2015")
+                     (let ((stats ))
+                       (celery--to-org-table-row '((w02 (total
+                                                         (swh\.worker\.tasks\.do_something_awesome . 27113)))
+                                                   (w01 (total
+                                                         (swh\.worker\.tasks\.do_something_awesome . 300))))))))))
 
 (ert-deftest test-celery--stats-to-org-row ()
-  (should (string= "| date                     |  w01 |   w02 | w01 + w02 |
-| Fri Aug  7 16:51:25 2015 | 5949 |  5703 |     11652 |
-| snapshot time            |  300 | 27113 |     27413 |
-|                          |      |       |         0 |
+  (should (string= "| date                     |   w01 |  w02 | w01 + w02 |
+| Fri Aug  7 16:51:25 2015 |  5949 | 5703 |     11652 |
+| snapshot time            | 27113 |  300 |     27413 |
+|                          |       |      |         0 |
 #+TBLFM: $4=vsum($2..$3)
 "
 
-                   (lexical-let ((stats '((w02 (total
-                                                (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                          (w01 (total
-                                                (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                     (with-mock
-                       (mock (current-time-string) => "snapshot time")
-                       (with-temp-buffer
-                         (org-mode)
-                         (insert "| date | w01 | w02 | + |\n")
-                         (insert "| Fri Aug  7 16:51:25 2015 | 5949 | 5703 |  |\n")
-                         (insert "#+TBLFM: $4=vsum($2..$3)\n")
-                         (previous-line 2)
-                         (beginning-of-line)
-                         (celery--stats-to-org-row stats '(w01 w02))
-                         (buffer-substring-no-properties (point-min) (point-max))))))))
+                   (with-mock
+                     (mock (current-time-string) => "snapshot time")
+                     (with-temp-buffer
+                       (org-mode)
+                       (insert "| date | w01 | w02 | + |\n")
+                       (insert "| Fri Aug  7 16:51:25 2015 | 5949 | 5703 |  |\n")
+                       (insert "#+TBLFM: $4=vsum($2..$3)\n")
+                       (previous-line 2)
+                       (beginning-of-line)
+                       (celery--stats-to-org-row '((w02 (total
+                                                         (swh\.worker\.tasks\.do_something_awesome . 27113)))
+                                                   (w01 (total
+                                                         (swh\.worker\.tasks\.do_something_awesome . 300)))))
+                       (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (ert-deftest test-celery-log ()
   (should (string= "Celery - This is a formatted message. Hello dude, how are you?"
