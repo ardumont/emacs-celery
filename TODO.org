@@ -1,12 +1,12 @@
 #+title: backlog
 #+author: ardumont
 
-* IN-PROGRESS 0.0.3 [40%]
+* IN-PROGRESS 0.0.3 [60%]
 - [X] Simplify json parsing
 - [X] Fix total tasks done problems when multiple tasks
-- [ ] Simplify data model representation
-- [ ] Deliver to melpa
-- [ ] Deliver to el-get
+- [X] Add group for customization group
+- [ ] melpa
+- [ ] el-get
 
 * DONE 0.0.2 [100%]
 CLOSED: [2015-08-08 Sat 11:33]
