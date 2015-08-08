@@ -184,16 +184,6 @@
                    (let ((celery-last-known-stats :old-stats))
                      (celery--compute-stats-workers-with-refresh 'with-refresh))))))
 
-;; (ert-deftest test-celery--with-delay-apply ()
-;;   (with-mock
-;;     (mock (celery--compute-stats-workers-with-refresh) => :stats)
-;;     (mock (celery-simplify-stats :stats) => :simplified-stats)
-;;     (celery--with-delay-apply
-;;      (lambda (stats)
-;;        (message "stats: %s" stats)
-;;        (should (equal :simplified-stats stats))))))
-;; does not work
-
 (ert-deftest test-celery-all-tasks-consumed ()
   (should (equal 6000
                  (celery-all-tasks-consumed '((worker02 (:total . 3600) (:processes . 2))
