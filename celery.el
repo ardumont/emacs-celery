@@ -84,11 +84,7 @@ Mostly to work offline.")
 
 (defun celery-compute-full-stats-workers ()
   "Compute the worker' stats in json data structure."
-  (let ((stats-json-str-output (celery--compute-json-string-stats)))
-    (with-temp-buffer
-      (insert stats-json-str-output)
-      (goto-char (point-min))
-      (json-read))))
+  (json-read-from-string (celery--compute-json-string-stats)))
 
 (defun celery-total-tasks-per-worker (stats worker)
   "Compute the total number of tasks from STATS for WORKER."
@@ -235,12 +231,6 @@ if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
 
 ;;;###autoload
 (define-minor-mode celery-mode
-
-
-
-
-
-
   "Minor mode to consolidate Emacs' celery extensions.
 
 \\{celery-mode-map}"
