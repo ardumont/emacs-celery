@@ -300,3 +300,33 @@
                    (with-mock
                      (mock (shell-command-to-string "celery inspect stats --quiet --no-color") => :foobar)
                      (celery--compute-raw-celery-output))))))
+
+(ert-deftest test-celery-log-total-tasks-consumed ()
+  (should (string= "Celery - Number of total tasks done: 6000"
+                   (celery-log-total-tasks-consumed '((w01 (:total . 1000) (:processes . 1))
+                                                      (w02 (:total . 2000) (:processes . 2))
+                                                      (w03 (:total . 3000) (:processes . 3)))))))
+
+(ert-deftest test-celery-log-stats ()
+  (should (string= "Celery - Stats: ((w01 (:total . 1000) (:processes . 1)) (w02 (:total . 2000) (:processes . 2)) (w03 (:total . 3000) (:processes . 3)))"
+                   (celery-log-stats '((w01 (:total . 1000) (:processes . 1))
+                                       (w02 (:total . 2000) (:processes . 2))
+                                       (w03 (:total . 3000) (:processes . 3)))))))
+
+(ert-deftest test-celery-stats-to-org-row ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery--stats-to-org-row :refresh) => :res)
+                (celery-stats-to-org-row :refresh)))))
+
+(ert-deftest test-celery-compute-tasks-consumed-workers ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery-log-total-tasks-consumed :refresh) => :res)
+                (celery-compute-tasks-consumed-workers :refresh)))))
+
+(ert-deftest test-celery-compute-stats-workers ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery-log-stats :refresh) => :res)
+                (celery-compute-stats-workers :refresh)))))
