@@ -1,11 +1,11 @@
-;;; celery.el ---                                      -*- lexical-binding: t; -*-
+;;; celery.el --- a minor mode to draw stats from celery and more?  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  ardumont
 
 ;; Author: ardumont <eniotna.t@gmail.com>
 ;; Keywords: celery, convenience
 ;; Package-Requires: ((emacs "24") (dash-functional "2.11.0") (s "1.9.0") (deferred "0.3.2"))
-;; Version: 0.0.1
+;; Version: 0.0.2
 ;; URL: https://github.com/ardumont/emacs-celery
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -23,25 +23,22 @@
 
 ;;; Commentary:
 
-;; Install this package from buffer (this will fetch the needed emacs deps)
-;; M-x package-install-from-buffer RET
-
-;; os pre-requisite:
+;; o.s. pre-requisite:
 ;; - either an accessible remote celery ready machine
-;; - either your local machine celery ready
+;; - either your local celery ready machine
 
 ;; For example, either the local machine with:
 ;; - celery installed on machine (apt-get install -y celeryd)
-;; - A ssh ready machine ~/.ssh/config (will help to simplify the command):
-;; Host <your-celery-host>
-;; Hostname <your-celery-hostname>
-;; User <user>
-;; IdentityFile <ssh-access-key>
-;; Now configure
-;; or access to a remote machine already setuped for it and the client machine
-;; able to connect to such machine. Then customize the
-;; `celery-command' variable to `ssh <your-celery-host> celery' and you
-;; are good to go.
+;; - A ssh ready machine (cf. README.org for detailed example)
+;;
+;; If using ssh, configure this mode to know it:
+;; (custom-set-variables '(celery-command "ssh remote-node celery"))
+;; and you should be good to go.
+;;
+;; You can order or filter the celery data outputed per worker using
+;; `celery-workers-list':
+;; (custom-set-variables '(celery-workers-list '(aw01 aw02)))
+;;
 
 ;;; Code:
 
@@ -54,7 +51,15 @@
   "The celery command in charge of outputing the result this mode parse.
 The user can override this.
 For example, if a remote machine only knows celery, it could be defined as:
-\(custom-set-variables '\(celery-command \"ssh remote-node celery")
+\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)")
+
+(defcustom celery-workers-list nil
+  "If non nil, filter the stats according to the content of this list.
+This is a list of worker names.")
+
+(defvar celery-last-known-stats nil
+  "Latest worker stats.
+Mostly to work offline.")
 
 (defun celery-log (&rest strs)
   "Log STRS."
@@ -85,42 +90,36 @@ For example, if a remote machine only knows celery, it could be defined as:
       (goto-char (point-min))
       (json-read))))
 
-(defvar celery-last-known-stats nil
-  "Latest worker stats.")
+(defun celery-total-tasks-per-worker (stats worker)
+  "Compute the total number of tasks from STATS for WORKER."
+  (-when-let (w (assoc-default worker stats))
+    (-> w
+        car
+        (plist-get :total))))
 
 (defun celery-count-processes-per-worker (stats worker)
   "Compute the number of tasks from STATS per WORKER."
   (-when-let (w (assoc-default worker stats))
-    (->> w
-         (assoc-default 'pool)
-         (assoc-default 'processes)
-         length)))
+    (-> w
+        car
+        (plist-get :processes)
+        length)))
 
-(defun celery-all-workers (stats)
+(defun celery-all-worker-names (stats)
   "Compute the number of workers from STATS."
   (mapcar #'car stats))
 
-;; total for one worker
-(defun celery-total-tasks-per-worker (stats worker)
-  "Compute the total number of tasks from STATS for WORKER."
-  (-when-let (w (assoc-default worker stats))
-    (->> w
-         (assoc-default 'total)
-         car
-         cdr)))
-
-(defun celery--to-org-table-row (stats &optional workers)
-  "Compute a row string from the STATS.
-If WORKERS is specified, use such list otherwise, use the workers from the stats."
-  (->> (mapcar (-compose #'int-to-string (-partial #'celery-total-tasks-per-worker stats))
-               (if workers workers (celery-all-workers stats)))
+(defun celery--to-org-table-row (stats)
+  "Compute a row string from the STATS."
+  (->> (mapcar (-compose #'int-to-string
+                         (-partial #'celery-total-tasks-per-worker stats))
+               (celery-all-worker-names stats))
        (cons (s-trim (current-time-string)))
        (s-join " | " )
        (format "| %s | ")))
 
-(defun celery--stats-to-org-row (stats &optional workers)
-  "Dump an org table row to the current buffer from STATS and optional WORKERS.
-If WORKERS list is specified, use it otherwise, use the workers list in STATS."
+(defun celery--stats-to-org-row (stats)
+  "Dump an org table row to the current buffer from STATS."
   (save-excursion
     (with-current-buffer (current-buffer)
       ;; make sure i'm at the right position
@@ -132,18 +131,41 @@ If WORKERS list is specified, use it otherwise, use the workers list in STATS."
       ;; clean up
       (kill-line)
       ;; insert the information we look for
-      (insert (celery--to-org-table-row stats workers))
+      (insert (celery--to-org-table-row stats))
       ;; align org column
       (org-cycle)
       ;; recompute eventual formula
       (org-table-recalculate 'all))))
 
-(defun celery-simplify-stats (stats)
-  "Compute the number of total tasks done per worker from the STATS."
-  (mapcar (-juxt 'identity
-                 (-compose (-partial #'cons :total) (-partial #'celery-total-tasks-per-worker stats))
-                 (-compose (-partial #'cons :processes) (-partial #'celery-count-processes-per-worker stats)))
-          (celery-all-workers stats)))
+(defun celery-full-stats-count-processes-per-worker (full-stats worker)
+  "Access processes stats from FULL-STATS for the WORKER."
+  (-when-let (w (assoc-default worker full-stats))
+    (->> w
+         (assoc-default 'pool)
+         (assoc-default 'processes)
+         length)))
+
+(defun celery-full-stats-total-tasks-per-worker (full-stats worker)
+  "Compute the total number of tasks from FULL-STATS for WORKER."
+  (-when-let (w (assoc-default worker full-stats))
+    (->> w
+         (assoc-default 'total)
+         car
+         cdr)))
+
+(defun celery-simplify-stats (full-stats)
+  "Compute the number of total tasks done per worker from the FULL-STATS."
+  (mapcar (lambda (worker)
+            `(,worker (:total ,(celery-full-stats-total-tasks-per-worker full-stats worker)
+                              :processes ,(celery-full-stats-count-processes-per-worker full-stats worker))))
+          (celery-all-worker-names full-stats)))
+
+(defun celery-filter-workers (stats &optional filter-workers-list)
+  "Filter the STATS according to FILTER-WORKERS-LIST.
+If filter is nil, keep the STATS as is."
+  (if filter-workers-list
+      (mapcar (-rpartial 'assq stats) filter-workers-list)
+    stats))
 
 (defun celery--compute-stats-workers-with-refresh (&optional refresh)
   "If REFRESH is specified or no previous stats, trigger a computation.
@@ -154,77 +176,71 @@ Otherwise, reuse the latest known values."
 
 (defun celery--with-delay-apply (fn &optional refresh)
   "Execute FN which takes a simplified STATS parameter.
-But first, compute the global stats.
-if REFRESH is non nil, trigger the global stats computation (refresh).
-Otherwise, reuse the latest known stats `celery-last-known-stats'."
+Detail:
+if REFRESH is non nil or no known stats exists, trigger a computation
+and store the result in `celery-last-known-stats for later.
+Otherwise, reuse the latest known stats `celery-last-known-stats'.
+Then simplify data to keep only relevant data (at the moment).
+Then filter data according to celery-workers-list.
+Then execute FN to do thy bidding."
   (deferred:$
     (deferred:call (-partial 'celery--compute-stats-workers-with-refresh refresh))
     (deferred:nextc it 'celery-simplify-stats)
+    (deferred:nextc it (-rpartial 'celery-filter-workers celery-workers-list))
     (deferred:nextc it fn)))
 
-(defcustom celery-workers-list
-  '(awork01.cloudapp.net
-    awork02.cloudapp.net
-    awork03.cloudapp.net
-    awork04.cloudapp.net
-    worker01
-    worker02
-    worker03
-    worker04
-    worker05
-    worker06
-    worker07
-    worker08)
-  "The list of workers to extract stats from.")
-
-(defun celery-stats-to-org-row (&optional refresh workers)
-  "Compute simplified stats with optional REFRESH for WORKERS.
-if REFRESH is non nil or no stats exists, trigger a computation.
+;;;###autoload
+(defun celery-stats-to-org-row (&optional refresh)
+  "Compute simplified stats with optional REFRESH.
+if REFRESH is non nil or no known stats exists, trigger a computation.
 Otherwise, reuse the latest known values.
-Also, if workers is specified, use this list otherwise use
-`celery-workers-list'.
-This command writes dummily a formatted org-table row.
+Also, use `celery-workers-list' to order/filter celery output.
+Otherwise, reuse the latest known stats `celery-last-known-stats'.
+This command writes a dummy formatted org-table row.
 So this needs to be applied in an org context to make sense."
   (interactive "P")
-  (celery--with-delay-apply
-   (lambda (stats)
-     (celery--stats-to-org-row stats
-                               (if workers workers celery-workers-list)))
-   refresh))
+  (celery--with-delay-apply 'celery--stats-to-org-row refresh))
 
+;;;###autoload
 (defun celery-compute-stats-workers (&optional refresh)
   "Compute the simplified workers' stats.
 if REFRESH is non nil, trigger a computation.
 Otherwise, reuse the latest known values."
   (interactive "P")
-  (celery--with-delay-apply
-   (-partial 'celery-log "Stats: %s")
-   refresh))
+  (celery--with-delay-apply (-partial 'celery-log "Stats: %s") refresh))
 
-(defun celery-number-tasks-consumed-per-worker (stats)
-  "Compute number tasks consumed per worker from the STATS."
+(defun celery-all-tasks-consumed (stats)
+  "Compute the total number of consumed tasks from the STATS."
   (->> stats
-       celery-simplify-stats
-       (mapcar #'cadr)
+       (mapcar (-partial 'assoc-default :total))
        (apply #'+)))
 
-(defun celery-check-cloner-workers (&optional refresh)
+;;;###autoload
+(defun celery-compute-tasks-consumed-workers (&optional refresh)
   "Check the current number of tasks executed by workers in celery.
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
   (interactive "P")
   (celery--with-delay-apply
-   (-partial 'celery-log "Number of tasks done: %s")
+   (-compose (-partial 'celery-log "Number of total tasks done: %s")
+             'celery-all-tasks-consumed)
    refresh))
 
 (defvar celery-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c , s") 'celery-compute-stats-workers)
     (define-key map (kbd "C-c , o") 'celery-stats-to-org-row)
-    (define-key map (kbd "C-c , a") 'celery-check-cloner-workers)
+    (define-key map (kbd "C-c , a") 'celery-compute-tasks-consumed-workers)
     map)
   "Keymap for celery mode.")
 
+;;;###autoload
 (define-minor-mode celery-mode
+
+
+
+
+
+
   "Minor mode to consolidate Emacs' celery extensions.
 
 \\{celery-mode-map}"

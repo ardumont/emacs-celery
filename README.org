@@ -1,0 +1,75 @@
+#+title: emacs-celery
+#+author: ardumont
+
+[[file:https://travis-ci.org/ardumont/emacs-celery.svg]]
+[[https://coveralls.io/r/ardumont/emacs-celery][file:https://coveralls.io/repos/ardumont/emacs-celery/badge.svg]]
+[[file:https:/img.shields.io/badge/marmalade-package-green.svg]]
+
+A minor mode to draw stats from celery and more?
+
+* Mode install
+
+For the moment, on marmalade.
+
+* How
+
+Partial wrapper around `celery` command to, at the moment:
+- extract current stats
+- ...
+
+We should be able to do more, typically what the celery command is able to do:
+- pool grow
+- pool shrink
+- etc...
+* Deps
+
+Celery application running on your box or ssh configuration on a ready celery node
+
+** celery on boxes
+
+Either install celery on the box:
+#+begin_src sh
+sudo apt-get install -y celeryd
+#+end_src
+
+** celery on remote box
+
+Or have a remote box celery ready.
+You'll have to customize the mode to execute the celery command remotely.
+
+*** Example 1
+
+#+begin_src emacs-lisp
+(custom-set-variables '(celery-command "ssh -i ssh-access-key -p 5647 -l user celery-ready-remote-node celery"))
+#+end_src
+
+*** Example 2
+
+Improved example 1 using ~/.ssh/config (standard use) to simplify:
+
+#+begin_src txt
+Host celery-ready-remote-node
+Hostname your-celery-hostname
+Port 5647
+User user
+IdentityFile ssh-access-key
+#+end_src
+
+so the customize command becomes:
+
+#+begin_src emacs-lisp
+(custom-set-variables '(celery-command "ssh celery-ready-remote-node celery"))
+#+end_src
+
+* OS?
+
+I'm a GNU/linux user so tested on this (debian).
+Still, it's emacs so it should be ok on all boxes as long as the celery configuration is ok.
+
+* Stability
+
+It's a bootstrap and driven according to my actual needs.
+
+Api breakage is a possibility.
+
+Feel free to file bugs or propose PR to improve.

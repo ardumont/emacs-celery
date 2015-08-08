@@ -4,7 +4,7 @@
 (package-file "celery.el")
 
 (files "celery.el"
-       "README.md")
+       "README.org")
 
 (development
  (depends-on "undercover")

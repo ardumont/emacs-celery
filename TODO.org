@@ -1,12 +1,25 @@
 #+title: backlog
 #+author: ardumont
 
-* TODO 0.0.2 [%]
-- [ ] Update version
+* TODO 0.0.3 [%]
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
-* IN-PROGRESS 0.0.1 [100%]
+* DONE 0.0.2 [100%]
+CLOSED: [2015-08-08 Sat 11:33]
+- [X] Fix release script error
+- [X] Add missing autoload statements
+- [X] Fix ci
+- [X] Improve documentation (README, doc comment...)
+- [X] Add license
+- [X] Update version
+- [X] Fix celery-compute-tasks-consumed-workers + add tests
+- [X] Improve user's custom filter on workers
+- [X] Refactoring (improve code + add tests)
+- [X] Release notes
+
+* DONE 0.0.1 [100%]
+CLOSED: [2015-08-07 Fri 20:28]
 - [X] Agnostify existing code
 - [X] Improve readme
 - [X] Add version

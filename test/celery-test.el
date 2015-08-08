@@ -63,129 +63,111 @@
 
                    (celery-compute-full-stats-workers)))))
 
-(ert-deftest test-celery-all-workers ()
-  (should (equal '(w01 w02) (celery-all-workers '((w01 (a . b)) (w02 (b . c))))))
-  (should-not (celery-all-workers '())))
+(ert-deftest test-celery-all-worker-names ()
+  (should (equal '(w01 w02) (celery-all-worker-names '((w01 (a . b)) (w02 (b . c))))))
+  (should-not (celery-all-worker-names '())))
 
 (ert-deftest test-celery-count-processes-per-worker ()
-  (should (equal 5 (let ((stats '((w02 (pool
-                                        (processes .
-                                                   [1 2 3 4 5]))))))
-                     (celery-count-processes-per-worker stats 'w02))))
-  (should-not (let ((stats '((w01 (pool
-                                   (processes .
-                                              [14221 14223]))))))
-                (celery-count-processes-per-worker stats 'w02))))
+  (should (equal 5 (celery-count-processes-per-worker
+                    '((w02 (:processes [1 2 3 4 5])))
+                    'w02)))
+  (should-not (celery-count-processes-per-worker '((w01 (:proc [1 2]))) 'w02)))
 
 (ert-deftest test-celery-total-tasks-per-worker ()
-  (should (equal 27113 (let ((stats '((w02 (total
-                                            (swh\.worker\.tasks\.do_something_awesome . 27113))))))
+  (should (equal 27113 (let ((stats '((w02 (:total 27113)))))
                          (celery-total-tasks-per-worker stats 'w02))))
-  (should-not (let ((stats '((w01 (total
-                                   (swh\.worker\.tasks\.do_something_awesome . 27113))))))
+  (should-not (let ((stats '((w01 (:total 27113)))))
                 (celery-total-tasks-per-worker stats 'w02))))
 
 (ert-deftest test-celery-total-tasks-per-worker ()
-  (should (string= "| Fri Aug  7 19:02:12 2015 | 27113 | 300 | " (with-mock
-                                                                   (mock (current-time-string) => "Fri Aug  7 19:02:12 2015")
-                                                                   (let ((stats '((w02 (total
-                                                                                        (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                                                                  (w01 (total
-                                                                                        (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                                                                     (celery--to-org-table-row stats)))))
-  (should (string= "| Fri Aug  7 19:02:38 2015 | 300 | " (with-mock
-                                                           (mock (current-time-string) => "Fri Aug  7 19:02:38 2015")
-                                                           (let ((stats '((w02 (total
-                                                                                (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                                                          (w01 (total
-                                                                                (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                                                             (celery--to-org-table-row stats '(w01)))))))
+  (should (string= "| Fri Aug  7 19:02:12 2015 | 27113 | 300 | "
+                   (with-mock
+                     (mock (current-time-string) => "Fri Aug  7 19:02:12 2015")
+                     (let ((stats ))
+                       (celery--to-org-table-row '((w02 (:total 27113))
+                                                   (w01 (:total 300)))))))))
 
 (ert-deftest test-celery--stats-to-org-row ()
-  (should (string= "| date                     |  w01 |   w02 | w01 + w02 |
-| Fri Aug  7 16:51:25 2015 | 5949 |  5703 |     11652 |
-| snapshot time            |  300 | 27113 |     27413 |
-|                          |      |       |         0 |
+  (should (string= "| date                     |   w01 |  w02 | w01 + w02 |
+| Fri Aug  7 16:51:25 2015 |  5949 | 5703 |     11652 |
+| snapshot time            | 27113 |  300 |     27413 |
+|                          |       |      |         0 |
 #+TBLFM: $4=vsum($2..$3)
 "
 
-                   (lexical-let ((stats '((w02 (total
-                                                (swh\.worker\.tasks\.do_something_awesome . 27113)))
-                                          (w01 (total
-                                                (swh\.worker\.tasks\.do_something_awesome . 300))))))
-                     (with-mock
-                       (mock (current-time-string) => "snapshot time")
-                       (with-temp-buffer
-                         (org-mode)
-                         (insert "| date | w01 | w02 | + |\n")
-                         (insert "| Fri Aug  7 16:51:25 2015 | 5949 | 5703 |  |\n")
-                         (insert "#+TBLFM: $4=vsum($2..$3)\n")
-                         (previous-line 2)
-                         (beginning-of-line)
-                         (celery--stats-to-org-row stats '(w01 w02))
-                         (buffer-substring-no-properties (point-min) (point-max))))))))
+                   (with-mock
+                     (mock (current-time-string) => "snapshot time")
+                     (with-temp-buffer
+                       (org-mode)
+                       (insert "| date | w01 | w02 | + |\n")
+                       (insert "| Fri Aug  7 16:51:25 2015 | 5949 | 5703 |  |\n")
+                       (insert "#+TBLFM: $4=vsum($2..$3)\n")
+                       (previous-line 2)
+                       (beginning-of-line)
+                       (celery--stats-to-org-row '((w02 (:total 27113))
+                                                   (w01 (:total 300))))
+                       (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (ert-deftest test-celery-log ()
   (should (string= "Celery - This is a formatted message. Hello dude, how are you?"
                    (celery-log "This is a formatted message. Hello %s, %s" "dude" "how are you?"))))
 
-
 (ert-deftest test-celery-simplify-stats ()
   (should (equal
-           '((worker02 (:total . 27113) (:processes . 2))
-             (worker99 (:total . 27113) (:processes . 2)))
-           (celery-simplify-stats '((worker02 (total
-                                               (swh\.worker\.tasks\.do_something_awesome . 27113))
-                                              (prefetch_count . 8)
-                                              (pool
-                                               (writes
-                                                (total . 27113)
-                                                (raw . "12702, 14411")
-                                                (inqueues
-                                                 (total . 2)
-                                                 (active . 0))
-                                                (avg . "50.00%")
-                                                (all . "46.85%, 53.15%"))
-                                               (timeouts .
-                                                         [3600.0 0])
-                                               (processes .
-                                                          [14221 14223])
-                                               (max-tasks-per-child . "N/A")
-                                               (max-concurrency . 1))
-                                              (pid . 14216)
-                                              (clock . "403897")
-                                              (broker
-                                               (virtual_host . "/")
-                                               (userid . "guest")
-                                               (heartbeat)
-                                               (connect_timeout . 4)
-                                               (alternates . [])))
-                                    (worker99 (total
-                                               (swh\.worker\.tasks\.do_something_awesome . 27113))
-                                              (prefetch_count . 8)
-                                              (pool
-                                               (writes
-                                                (total . 27113)
-                                                (raw . "12702, 14411")
-                                                (inqueues
-                                                 (total . 2)
-                                                 (active . 0))
-                                                (avg . "50.00%")
-                                                (all . "46.85%, 53.15%"))
-                                               (timeouts .
-                                                         [3600.0 0])
-                                               (processes .
-                                                          [14221 14223])
-                                               (max-tasks-per-child . "N/A")
-                                               (max-concurrency . 1))
-                                              (pid . 14216)
-                                              (clock . "403897")
-                                              (broker
-                                               (virtual_host . "/")
-                                               (userid . "guest")
-                                               (heartbeat)
-                                               (connect_timeout . 4)
-                                               (alternates . []))))))))
+           '((w02 (:total 200 :processes 2))
+             (w01 (:total 100 :processes 1)))
+           (celery-simplify-stats '((w02 (total
+                                          (swh\.worker\.tasks\.do_something_awesome . 200))
+                                         (prefetch_count . 8)
+                                         (pool
+                                          (writes
+                                           (total . 27113)
+                                           (raw . "12702, 14411")
+                                           (inqueues
+                                            (total . 2)
+                                            (active . 0))
+                                           (avg . "50.00%")
+                                           (all . "46.85%, 53.15%"))
+                                          (timeouts .
+                                                    [3600.0 0])
+                                          (processes .
+                                                     [2 1])
+                                          (max-tasks-per-child . "N/A")
+                                          (max-concurrency . 1))
+                                         (pid . 14216)
+                                         (clock . "403897")
+                                         (broker
+                                          (virtual_host . "/")
+                                          (userid . "guest")
+                                          (heartbeat)
+                                          (connect_timeout . 4)
+                                          (alternates . [])))
+                                    (w01 (total
+                                          (swh\.worker\.tasks\.do_something_awesome . 100))
+                                         (prefetch_count . 8)
+                                         (pool
+                                          (writes
+                                           (total . 27113)
+                                           (raw . "12702, 14411")
+                                           (inqueues
+                                            (total . 2)
+                                            (active . 0))
+                                           (avg . "50.00%")
+                                           (all . "46.85%, 53.15%"))
+                                          (timeouts .
+                                                    [3600.0 0])
+                                          (processes .
+                                                     [1])
+                                          (max-tasks-per-child . "N/A")
+                                          (max-concurrency . 1))
+                                         (pid . 14216)
+                                         (clock . "403897")
+                                         (broker
+                                          (virtual_host . "/")
+                                          (userid . "guest")
+                                          (heartbeat)
+                                          (connect_timeout . 4)
+                                          (alternates . []))))))))
 
 (ert-deftest test-celery--compute-stats-workers-with-refresh ()
   (should (equal :full-stats
@@ -208,5 +190,49 @@
 ;;     (mock (celery-simplify-stats :stats) => :simplified-stats)
 ;;     (celery--with-delay-apply
 ;;      (lambda (stats)
+;;        (message "stats: %s" stats)
 ;;        (should (equal :simplified-stats stats))))))
 ;; does not work
+
+(ert-deftest test-celery-all-tasks-consumed ()
+  (should (equal 6000
+                 (celery-all-tasks-consumed '((worker02 (:total . 3600) (:processes . 2))
+                                              (worker99 (:total . 2400) (:processes . 2)))))))
+
+(ert-deftest test-celery-filter-workers ()
+  (should-not (celery-filter-workers nil))
+  (should (equal :stats
+                 (celery-filter-workers :stats)))
+  (should (equal '((w01 (:total . 1000) (:processes . 1))
+                   (w02 (:total . 2000) (:processes . 2))
+                   (w03 (:total . 3000) (:processes . 3)))
+                 (celery-filter-workers '((w03 (:total . 3000) (:processes . 3))
+                                          (w01 (:total . 1000) (:processes . 1))
+                                          (w02 (:total . 2000) (:processes . 2))
+                                          (w04 (:total . 4000) (:processes . 4)))
+                                        '(w01 w02 w03)))))
+
+(ert-deftest test-celery-full-stats-count-processes-per-worker ()
+  (should (equal 5 (let ((stats '((w02 (pool
+                                        (processes . [1 2 3 4 5]))))))
+                     (celery-full-stats-count-processes-per-worker stats 'w02))))
+  (should-not (let ((stats '((w01 (pool
+                                   (processes . [14221 14223]))))))
+                (celery-full-stats-count-processes-per-worker stats 'w02))))
+
+(ert-deftest test-celery-full-stats-total-tasks-per-worker ()
+  (should (equal 27113 (celery-full-stats-total-tasks-per-worker
+                        '((w01 (total
+                                (swh\.worker\.tasks\.do_something_awesome . 27113))))
+                        'w01)))
+  (should-not (celery-full-stats-total-tasks-per-worker
+               '((w01 (total
+                       (swh\.worker\.tasks\.do_something_awesome . 27113))))
+               'w02)))
+
+(ert-deftest test-celery--compute-raw-celery-output ()
+  (should (equal :foobar
+                 (let ((celery-command "celery"))
+                   (with-mock
+                     (mock (shell-command-to-string "celery inspect stats --quiet --no-color") => :foobar)
+                     (celery--compute-raw-celery-output))))))
