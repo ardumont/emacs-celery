@@ -1,11 +1,11 @@
 #+title: backlog
 #+author: ardumont
 
-* IN-PROGRESS 0.0.3 [60%]
+* IN-PROGRESS 0.0.3 [80%]
 - [X] Simplify json parsing
 - [X] Fix total tasks done problems when multiple tasks
 - [X] Add group for customization group
-- [ ] melpa
+- [X] melpa - https://github.com/milkypostman/melpa/pull/3002
 - [ ] el-get
 
 * DONE 0.0.2 [100%]
