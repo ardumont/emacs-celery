@@ -1,13 +1,13 @@
 #+title: backlog
 #+author: ardumont
 
-* IN-PROGRESS 0.0.2 [62%]
+* IN-PROGRESS 0.0.2 [75%]
 - [X] Fix release script error
 - [X] Add missing autoload statements
 - [X] Fix ci
 - [X] Improve documentation (README, doc comment...)
 - [X] Add license
-- [ ] Update version
+- [X] Update version
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
