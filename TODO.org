@@ -1,7 +1,10 @@
 #+title: backlog
 #+author: ardumont
 
-* TODO 0.0.3 [%]
+* IN-PROGRESS 0.0.3 [20%]
+- [X] Simplify json parsing
+- [ ] Fix potential total sum problem
+- [ ] Simplify data model representation
 - [ ] Deliver to melpa
 - [ ] Deliver to el-get
 
