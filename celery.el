@@ -5,7 +5,7 @@
 ;; Author: ardumont <eniotna.t@gmail.com>
 ;; Keywords: celery, convenience
 ;; Package-Requires: ((emacs "24") (dash-functional "2.11.0") (s "1.9.0") (deferred "0.3.2"))
-;; Version: 0.0.2
+;; Version: 0.0.3
 ;; URL: https://github.com/ardumont/emacs-celery
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -47,15 +47,22 @@
 (require 'json)
 (require 's)
 
+(defgroup celery nil " Celery customisation group."
+  :tag "Celery"
+  :version "0.0.3"
+  :group 'celery)
+
 (defcustom celery-command "celery"
   "The celery command in charge of outputing the result this mode parse.
 The user can override this.
 For example, if a remote machine only knows celery, it could be defined as:
-\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)")
+\(custom-set-variables '\(celery-command \"ssh remote-node celery\"\)\)"
+  :group 'celery)
 
 (defcustom celery-workers-list nil
   "If non nil, filter the stats according to the content of this list.
-This is a list of worker names.")
+This is a list of worker names."
+  :group 'celery)
 
 (defvar celery-last-known-stats nil
   "Latest worker stats.
@@ -84,11 +91,7 @@ Mostly to work offline.")
 
 (defun celery-compute-full-stats-workers ()
   "Compute the worker' stats in json data structure."
-  (let ((stats-json-str-output (celery--compute-json-string-stats)))
-    (with-temp-buffer
-      (insert stats-json-str-output)
-      (goto-char (point-min))
-      (json-read))))
+  (json-read-from-string (celery--compute-json-string-stats)))
 
 (defun celery-total-tasks-per-worker (stats worker)
   "Compute the total number of tasks from STATS for WORKER."
@@ -139,19 +142,19 @@ Mostly to work offline.")
 
 (defun celery-full-stats-count-processes-per-worker (full-stats worker)
   "Access processes stats from FULL-STATS for the WORKER."
-  (-when-let (w (assoc-default worker full-stats))
-    (->> w
+  (-when-let (worker-stats (assoc-default worker full-stats))
+    (->> worker-stats
          (assoc-default 'pool)
          (assoc-default 'processes)
          length)))
 
 (defun celery-full-stats-total-tasks-per-worker (full-stats worker)
   "Compute the total number of tasks from FULL-STATS for WORKER."
-  (-when-let (w (assoc-default worker full-stats))
-    (->> w
+  (-when-let (worker-stats (assoc-default worker full-stats))
+    (->> worker-stats
          (assoc-default 'total)
-         car
-         cdr)))
+         (mapcar #'cdr)
+         (apply #'+))))
 
 (defun celery-simplify-stats (full-stats)
   "Compute the number of total tasks done per worker from the FULL-STATS."
@@ -201,13 +204,15 @@ So this needs to be applied in an org context to make sense."
   (interactive "P")
   (celery--with-delay-apply 'celery--stats-to-org-row refresh))
 
+(defalias 'celery-log-stats (-partial 'celery-log "Stats: %s"))
+
 ;;;###autoload
 (defun celery-compute-stats-workers (&optional refresh)
   "Compute the simplified workers' stats.
 if REFRESH is non nil, trigger a computation.
 Otherwise, reuse the latest known values."
   (interactive "P")
-  (celery--with-delay-apply (-partial 'celery-log "Stats: %s") refresh))
+  (celery--with-delay-apply 'celery-log-stats refresh))
 
 (defun celery-all-tasks-consumed (stats)
   "Compute the total number of consumed tasks from the STATS."
@@ -215,15 +220,16 @@ Otherwise, reuse the latest known values."
        (mapcar (-partial 'assoc-default :total))
        (apply #'+)))
 
+(defalias 'celery-log-total-tasks-consumed
+  (-compose (-partial 'celery-log "Number of total tasks done: %s")
+            'celery-all-tasks-consumed))
+
 ;;;###autoload
 (defun celery-compute-tasks-consumed-workers (&optional refresh)
   "Check the current number of tasks executed by workers in celery.
 if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
   (interactive "P")
-  (celery--with-delay-apply
-   (-compose (-partial 'celery-log "Number of total tasks done: %s")
-             'celery-all-tasks-consumed)
-   refresh))
+  (celery--with-delay-apply 'celery-log-total-tasks-consumed refresh))
 
 (defvar celery-mode-map
   (let ((map (make-sparse-keymap)))
@@ -235,12 +241,6 @@ if REFRESH is mentioned, trigger a check, otherwise, use the latest value."
 
 ;;;###autoload
 (define-minor-mode celery-mode
-
-
-
-
-
-
   "Minor mode to consolidate Emacs' celery extensions.
 
 \\{celery-mode-map}"

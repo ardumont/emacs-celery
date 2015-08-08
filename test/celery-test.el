@@ -3,9 +3,81 @@
 
 (require 'celery)
 
+(ert-deftest test-celery--compute-json-string-stats ()
+  (should (string= "{
+ \"worker02\":
+    {
+        \"broker\": {
+            \"alternates\": [],
+            \"connect_timeout\": 4,
+            \"heartbeat\": null,
+            \"hostname\": \"moma\",
+            \"insist\": false,
+            \"login_method\": \"AMQPLAIN\",
+            \"port\": 5672,
+            \"ssl\": false,
+            \"transport\": \"amqp\",
+            \"transport_options\": {},
+            \"uri_prefix\": null,
+            \"userid\": \"guest\",
+            \"virtual_host\": \"/\"
+        },
+        \"clock\": \"403897\",
+        \"pid\": 14216,
+        \"pool\": {
+            \"max-concurrency\": 1,
+            \"max-tasks-per-child\": \"N/A\",
+            \"processes\": [
+                14221,
+                14223
+            ],
+            \"put-guarded-by-semaphore\": false,
+            \"timeouts\": [
+                3600.0,
+                0
+            ],
+            \"writes\": {
+                \"all\": \"46.85%, 53.15%\",
+                \"avg\": \"50.00%\",
+                \"inqueues\": {
+                    \"active\": 0,
+                    \"total\": 2
+                },
+                \"raw\": \"12702, 14411\",
+                \"total\": 27113
+            }
+        },
+        \"prefetch_count\": 8,
+        \"rusage\": {
+            \"idrss\": 0,
+            \"inblock\": 14280,
+            \"isrss\": 0,
+            \"ixrss\": 0,
+            \"majflt\": 38,
+            \"maxrss\": 36568,
+            \"minflt\": 15180,
+            \"msgrcv\": 0,
+            \"msgsnd\": 0,
+            \"nivcsw\": 132094,
+            \"nsignals\": 0,
+            \"nswap\": 0,
+            \"nvcsw\": 208050,
+            \"oublock\": 0,
+            \"stime\": 26.512,
+            \"utime\": 393.488
+        },
+        \"total\": {
+            \"worker.tasks.do_something_awesome\": 27113
+        }
+    }
+}"
+                   (with-mock
+                     (mock (celery--compute-raw-celery-output) => "celery@worker02: OK\n    {\n        \"broker\": {\n            \"alternates\": [],\n            \"connect_timeout\": 4,\n            \"heartbeat\": null,\n            \"hostname\": \"moma\",\n            \"insist\": false,\n            \"login_method\": \"AMQPLAIN\",\n            \"port\": 5672,\n            \"ssl\": false,\n            \"transport\": \"amqp\",\n            \"transport_options\": {},\n            \"uri_prefix\": null,\n            \"userid\": \"guest\",\n            \"virtual_host\": \"/\"\n        },\n        \"clock\": \"403897\",\n        \"pid\": 14216,\n        \"pool\": {\n            \"max-concurrency\": 1,\n            \"max-tasks-per-child\": \"N/A\",\n            \"processes\": [\n                14221,\n                14223\n            ],\n            \"put-guarded-by-semaphore\": false,\n            \"timeouts\": [\n                3600.0,\n                0\n            ],\n            \"writes\": {\n                \"all\": \"46.85%, 53.15%\",\n                \"avg\": \"50.00%\",\n                \"inqueues\": {\n                    \"active\": 0,\n                    \"total\": 2\n                },\n                \"raw\": \"12702, 14411\",\n                \"total\": 27113\n            }\n        },\n        \"prefetch_count\": 8,\n        \"rusage\": {\n            \"idrss\": 0,\n            \"inblock\": 14280,\n            \"isrss\": 0,\n            \"ixrss\": 0,\n            \"majflt\": 38,\n            \"maxrss\": 36568,\n            \"minflt\": 15180,\n            \"msgrcv\": 0,\n            \"msgsnd\": 0,\n            \"nivcsw\": 132094,\n            \"nsignals\": 0,\n            \"nswap\": 0,\n            \"nvcsw\": 208050,\n            \"oublock\": 0,\n            \"stime\": 26.512,\n            \"utime\": 393.488\n        },\n        \"total\": {\n            \"worker.tasks.do_something_awesome\": 27113\n        }\n    }")
+                     (celery--compute-json-string-stats)))))
+
 (ert-deftest test-celery-compute-full-stats-workers ()
   (should (equal '((worker02 (total
-                              (swh\.worker\.tasks\.do_something_awesome . 27113))
+                              (worker\.tasks\.do_something_awesome . 27113))
                              (rusage
                               (utime . 393.488)
                               (stime . 26.512)
@@ -59,7 +131,7 @@
                                           []))))
                  (with-mock
                    (mock (celery--compute-raw-celery-output) =>
-                         "celery@worker02: OK\n    {\n        \"broker\": {\n            \"alternates\": [],\n            \"connect_timeout\": 4,\n            \"heartbeat\": null,\n            \"hostname\": \"moma\",\n            \"insist\": false,\n            \"login_method\": \"AMQPLAIN\",\n            \"port\": 5672,\n            \"ssl\": false,\n            \"transport\": \"amqp\",\n            \"transport_options\": {},\n            \"uri_prefix\": null,\n            \"userid\": \"guest\",\n            \"virtual_host\": \"/\"\n        },\n        \"clock\": \"403897\",\n        \"pid\": 14216,\n        \"pool\": {\n            \"max-concurrency\": 1,\n            \"max-tasks-per-child\": \"N/A\",\n            \"processes\": [\n                14221,\n                14223\n            ],\n            \"put-guarded-by-semaphore\": false,\n            \"timeouts\": [\n                3600.0,\n                0\n            ],\n            \"writes\": {\n                \"all\": \"46.85%, 53.15%\",\n                \"avg\": \"50.00%\",\n                \"inqueues\": {\n                    \"active\": 0,\n                    \"total\": 2\n                },\n                \"raw\": \"12702, 14411\",\n                \"total\": 27113\n            }\n        },\n        \"prefetch_count\": 8,\n        \"rusage\": {\n            \"idrss\": 0,\n            \"inblock\": 14280,\n            \"isrss\": 0,\n            \"ixrss\": 0,\n            \"majflt\": 38,\n            \"maxrss\": 36568,\n            \"minflt\": 15180,\n            \"msgrcv\": 0,\n            \"msgsnd\": 0,\n            \"nivcsw\": 132094,\n            \"nsignals\": 0,\n            \"nswap\": 0,\n            \"nvcsw\": 208050,\n            \"oublock\": 0,\n            \"stime\": 26.512,\n            \"utime\": 393.488\n        },\n        \"total\": {\n            \"swh.worker.tasks.do_something_awesome\": 27113\n        }\n    }")
+                         "celery@worker02: OK\n    {\n        \"broker\": {\n            \"alternates\": [],\n            \"connect_timeout\": 4,\n            \"heartbeat\": null,\n            \"hostname\": \"moma\",\n            \"insist\": false,\n            \"login_method\": \"AMQPLAIN\",\n            \"port\": 5672,\n            \"ssl\": false,\n            \"transport\": \"amqp\",\n            \"transport_options\": {},\n            \"uri_prefix\": null,\n            \"userid\": \"guest\",\n            \"virtual_host\": \"/\"\n        },\n        \"clock\": \"403897\",\n        \"pid\": 14216,\n        \"pool\": {\n            \"max-concurrency\": 1,\n            \"max-tasks-per-child\": \"N/A\",\n            \"processes\": [\n                14221,\n                14223\n            ],\n            \"put-guarded-by-semaphore\": false,\n            \"timeouts\": [\n                3600.0,\n                0\n            ],\n            \"writes\": {\n                \"all\": \"46.85%, 53.15%\",\n                \"avg\": \"50.00%\",\n                \"inqueues\": {\n                    \"active\": 0,\n                    \"total\": 2\n                },\n                \"raw\": \"12702, 14411\",\n                \"total\": 27113\n            }\n        },\n        \"prefetch_count\": 8,\n        \"rusage\": {\n            \"idrss\": 0,\n            \"inblock\": 14280,\n            \"isrss\": 0,\n            \"ixrss\": 0,\n            \"majflt\": 38,\n            \"maxrss\": 36568,\n            \"minflt\": 15180,\n            \"msgrcv\": 0,\n            \"msgsnd\": 0,\n            \"nivcsw\": 132094,\n            \"nsignals\": 0,\n            \"nswap\": 0,\n            \"nvcsw\": 208050,\n            \"oublock\": 0,\n            \"stime\": 26.512,\n            \"utime\": 393.488\n        },\n        \"total\": {\n            \"worker.tasks.do_something_awesome\": 27113\n        }\n    }")
 
                    (celery-compute-full-stats-workers)))))
 
@@ -79,7 +151,7 @@
   (should-not (let ((stats '((w01 (:total 27113)))))
                 (celery-total-tasks-per-worker stats 'w02))))
 
-(ert-deftest test-celery-total-tasks-per-worker ()
+(ert-deftest test-celery--to-org-table-row ()
   (should (string= "| Fri Aug  7 19:02:12 2015 | 27113 | 300 | "
                    (with-mock
                      (mock (current-time-string) => "Fri Aug  7 19:02:12 2015")
@@ -184,16 +256,6 @@
                    (let ((celery-last-known-stats :old-stats))
                      (celery--compute-stats-workers-with-refresh 'with-refresh))))))
 
-;; (ert-deftest test-celery--with-delay-apply ()
-;;   (with-mock
-;;     (mock (celery--compute-stats-workers-with-refresh) => :stats)
-;;     (mock (celery-simplify-stats :stats) => :simplified-stats)
-;;     (celery--with-delay-apply
-;;      (lambda (stats)
-;;        (message "stats: %s" stats)
-;;        (should (equal :simplified-stats stats))))))
-;; does not work
-
 (ert-deftest test-celery-all-tasks-consumed ()
   (should (equal 6000
                  (celery-all-tasks-consumed '((worker02 (:total . 3600) (:processes . 2))
@@ -221,9 +283,11 @@
                 (celery-full-stats-count-processes-per-worker stats 'w02))))
 
 (ert-deftest test-celery-full-stats-total-tasks-per-worker ()
-  (should (equal 27113 (celery-full-stats-total-tasks-per-worker
+  (should (equal 30000 (celery-full-stats-total-tasks-per-worker
                         '((w01 (total
-                                (swh\.worker\.tasks\.do_something_awesome . 27113))))
+                                (do_something_awesome . 27000)
+                                (do_awesomer_stuff . 2000)
+                                (yet_another_task . 1000))))
                         'w01)))
   (should-not (celery-full-stats-total-tasks-per-worker
                '((w01 (total
@@ -236,3 +300,33 @@
                    (with-mock
                      (mock (shell-command-to-string "celery inspect stats --quiet --no-color") => :foobar)
                      (celery--compute-raw-celery-output))))))
+
+(ert-deftest test-celery-log-total-tasks-consumed ()
+  (should (string= "Celery - Number of total tasks done: 6000"
+                   (celery-log-total-tasks-consumed '((w01 (:total . 1000) (:processes . 1))
+                                                      (w02 (:total . 2000) (:processes . 2))
+                                                      (w03 (:total . 3000) (:processes . 3)))))))
+
+(ert-deftest test-celery-log-stats ()
+  (should (string= "Celery - Stats: ((w01 (:total . 1000) (:processes . 1)) (w02 (:total . 2000) (:processes . 2)) (w03 (:total . 3000) (:processes . 3)))"
+                   (celery-log-stats '((w01 (:total . 1000) (:processes . 1))
+                                       (w02 (:total . 2000) (:processes . 2))
+                                       (w03 (:total . 3000) (:processes . 3)))))))
+
+(ert-deftest test-celery-stats-to-org-row ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery--stats-to-org-row :refresh) => :res)
+                (celery-stats-to-org-row :refresh)))))
+
+(ert-deftest test-celery-compute-tasks-consumed-workers ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery-log-total-tasks-consumed :refresh) => :res)
+                (celery-compute-tasks-consumed-workers :refresh)))))
+
+(ert-deftest test-celery-compute-stats-workers ()
+  (should (eq :res
+              (with-mock
+                (mock (celery--with-delay-apply 'celery-log-stats :refresh) => :res)
+                (celery-compute-stats-workers :refresh)))))
