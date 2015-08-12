@@ -50,7 +50,7 @@
 (defgroup celery nil " Celery customisation group."
   :tag "Celery"
   :version "0.0.3"
-  :group 'celery)
+  :group 'External)
 
 (defcustom celery-command "celery"
   "The celery command in charge of outputing the result this mode parse.
