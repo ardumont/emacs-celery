@@ -1,6 +1,6 @@
 ;;; celery.el --- a minor mode to draw stats from celery and more?  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015  ardumont
+;; Copyright (C) 2015-2017  ardumont
 
 ;; Author: ardumont <eniotna.t@gmail.com>
 ;; Keywords: celery, convenience
